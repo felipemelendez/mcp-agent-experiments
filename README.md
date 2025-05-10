@@ -52,14 +52,20 @@ mkdir mcp‑quickstart
 cd mcp‑quickstart
 ```
 
-### 2  Create & activate the virtual env *(repeat inside any new shell)*
+### 2  Open the folder in Cursor (optional)
+
+```
+open -a "Cursor" .
+```
+
+### 3  Create & activate the virtual env *(repeat inside any new shell)*
 
 ```
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 3  Install dependencies
+### 4  Install dependencies
 
 ```
 pip install mcp‑use langchain‑openai python‑dotenv
@@ -67,13 +73,13 @@ pip install mcp‑use langchain‑openai python‑dotenv
 
 *Need Anthropic, Groq, etc.?* Swap in `langchain‑anthropic`, `langchain‑groq`, …
 
-### 4  Add your LLM API key
+### 5  Add your LLM API key
 
 ```
 echo "OPENAI_API_KEY=sk‑..." > .env
 ```
 
-### 5  Create **browser\_mcp.json**
+### 6  Create **browser\_mcp.json**
 
 ```
 {
@@ -87,7 +93,7 @@ echo "OPENAI_API_KEY=sk‑..." > .env
 }
 ```
 
-### 6  Create **agent.py**
+### 7  Create **agent.py**
 
 ```
 import asyncio, os
@@ -108,7 +114,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### 7  Run the agent
+### 8  Run the agent
 
 ```
 python agent.py
@@ -116,11 +122,6 @@ python agent.py
 
 ⌛ First launch downloads the Playwright MCP server via *npx*, so it may take a minute.
 
-### 8  Open the folder in Cursor (optional)
-
-```
-open -a "Cursor" .
-```
 
 Project tree should now look like:
 
