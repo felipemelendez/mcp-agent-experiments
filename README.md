@@ -23,29 +23,23 @@ Model Context Protocol (MCP) is a lightweight spec that lets a large‑language�
 > This turns a one‑shot chat model into a goal‑seeking problem‑solver that can fetch live data, write files, send emails, and more.
 
 ### Under the Hood
-
+What happens inside `await agent.run("…")`
 ```
-User prompt                ┌───────────────┐
-   │                       │  LLM “thinks” │
-   ▼                       └──────┬────────┘
- decides to call search_web     JSON tool‑call
-   │                                 │
-   │               ┌────────────┐    ▼
-   │               │ MCPAgent   │ marshals payload
-   │               └────┬───────┘
-   │                    ▼
-   │               ┌────────────┐  finds matching
-   │               │ MCPClient  │──server & session
-   │               └────┬───────┘
-   │                    ▼
-   │            ┌────────────────┐  sandboxed
-   │            │  MCP server    │  tool executes
-   │            └────────────────┘
-   │                    │
-   │   JSON result ◄────┘
+User prompt
+   │
    ▼
-Tool output appended to chat; loop continues until final answer.
+[LLM “thinks”] ──► decides to call `search_web`
+   │                          │
+   │               MCPAgent marshals JSON
+   │                          ▼
+[MCPClient] ──► finds matching MCP server ──► tool runs in a sandbox
+   │                                               │
+   │<───────── JSON result comes back ─────────────┘
+   │
+   ▼
+Tool output appended to chat; loop continues
 ```
+The loop ends when the model returns ordinary text instead of another tool-call, and that becomes the final answer.
 
 ---
 
