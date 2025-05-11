@@ -15,12 +15,12 @@ Model Context Protocol (MCP) is a lightweight spec that lets a large‑language�
 
 ## 🤖 How an Agent Thinks
 
-1. **Think** – pass the prompt (plus scratch‑pad) to the model.
-2. **Act** – if the model returns a tool‑call, execute it through MCPClient.
-3. **Observe** – feed the tool’s output back into the chat context.
-4. Repeat until the model emits ordinary text or a guard condition fires.
+1. **Think** – The model receives the user prompt along with a scratch-pad: a running history of its previous thoughts, tool calls, and observations. This gives the model memory within the loop, helping it reason step-by-step, avoid repetition, and stay grounded in context.
+2. **Act** – If the model decides to call a tool, MCPAgent encodes the request and executes it via MCPClient.
+3. **Observe** – The result of the tool call is captured and appended to the scratch-pad.
+4. **Repeat** - The model receives the updated context and continues reasoning until it outputs a final answer (i.e., regular text) or hits a termination condition.
 
-> This turns a one‑shot chat model into a goal‑seeking problem‑solver that can fetch live data, write files, send emails, and more.
+> This loop turns a one-shot chat model into a goal-seeking problem-solver—able to gather live data, perform multi-step reasoning, and take real-world actions.
 
 ### Under the Hood
 What happens inside `await agent.run("…")`
