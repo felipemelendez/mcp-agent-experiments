@@ -144,7 +144,7 @@ mcp-quickstart/
 
 ---
 
-## 🧰 Why We Use mcp-use
+## 🧰 Why We Use `mcp-use`
 
 *A tiny Python toolkit that erases the boilerplate you'd normally write to talk to MCP servers.*
 
@@ -233,58 +233,88 @@ Unlike heavyweight “agent platforms” that ship their *own* orchestration lay
 
 ---
 
-## 📡 Appendix: MCP Protocol Details
+## 📡 Appendix — MCP Protocol Details
 
-*For developers who want to understand the protocol implementation details.*
+*For developers who want to see exactly what goes over the wire.*
 
-### Transport & Envelope
+---
 
-| Layer | Technology | Why It's Used |
+### Transport & Envelope
+
+| Layer | Technology | Why It’s Used |
 |-------|------------|---------------|
-| **Wire** | JSON‑RPC 2.0 over **WebSocket**, **stdio**, or **SSE** | Gives request/response IDs, typed errors, and streaming without reinventing the wheel |
-| **Session** | *Stateful* connection negotiated via initialize | Keeps resources (e.g., a browser tab) alive across many calls |
+| **Wire** | JSON‑RPC 2.0 over **WebSocket**, **stdio**, or **SSE** | Gives request/response IDs, typed errors, and streaming without reinventing framing |
+| **Session** | *Stateful* connection negotiated via `initialize` | Keeps heavyweight resources (e.g., an open browser tab) alive across many calls |
 
 > **Handshake in two messages (client → server):**  
-> 1️⃣ `initialize` — declares client name, version, supported transports  
-> 2️⃣ `initialize/complete` ← server returns metadata + advertised features (tools, resources, prompts)  
+> 1️⃣ `initialize` — declares client name, version, and transports  
+> 2️⃣ `initialize/complete` ← server returns metadata + advertised features (tools, resources, prompts)
 
-### Tool Discovery
+---
+
+## 🔍 Tool Discovery — “What buttons can I press?”
+
+The agent first asks the server which tools it exposes.  
+This happens as **two separate JSON‑RPC messages**.
+
+### 1. Client → Server
+
 ```json
-// list available tools
 {
   "jsonrpc": "2.0",
   "id": 42,
   "method": "tools/list"
 }
+```
 
-// server response (truncated)
+### 2. Server → Client
+
+```json
 {
   "jsonrpc": "2.0",
   "id": 42,
   "result": {
-    "tools": [{
-      "name": "calculate_sum",
-      "description": "Add two numbers together",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "a": { "type": "number" },
-          "b": { "type": "number" }
+    "tools": [
+      {
+        "name": "calculate_sum",
+        "description": "Add two numbers together",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "a": { "type": "number" },
+            "b": { "type": "number" }
+          },
+          "required": ["a", "b"]
         },
-        "required": ["a", "b"]
-      },
-      "annotations": {
-        "idempotentHint": true,
-        "openWorldHint": false
+        "annotations": {
+          "idempotentHint": true,
+          "openWorldHint": false
+        }
       }
-    }]
+    ]
   }
 }
 ```
 
-### Tool Invocation
+| Field | Meaning |
+|-------|---------|
+| **`name`** | Call‑sign the agent will use later in `tools/call`. |
+| **`description`** | Natural‑language cue that steers the LLM. |
+| **`inputSchema`** | JSON Schema that enforces argument names, types, & required fields. |
+| **`annotations.idempotentHint`** | `true` ⇒ safe to call twice with same inputs (no side‑effects). |
+| **`annotations.openWorldHint`** | `false` ⇒ bounded effects; good for safety filters. |
+
+> ☑️ Because both messages share `id = 42`, the client can pair request and response even if several calls are inflight.
+
+---
+
+## 🛠️ Tool Invocation — “Press the button”
+
+Once the agent knows a tool exists, it can invoke it.
+
+### 1. Client → Server
+
 ```json
-// model decides to add 5 + 7
 {
   "jsonrpc": "2.0",
   "id": 43,
@@ -293,19 +323,41 @@ Unlike heavyweight “agent platforms” that ship their *own* orchestration lay
     "name": "calculate_sum",
     "arguments": { "a": 5, "b": 7 }
   }
-},
+}
+```
+
+### 2. Server → Client
+
+```json
 {
   "jsonrpc": "2.0",
   "id": 43,
   "result": {
-    "content": [{
-      "type": "text",
-      "text": "12"
-    }]
+    "content": [
+      { "type": "text", "text": "12" }
+    ]
   }
 }
 ```
-*The LLM reads “content,” sees “12,” and either continues planning or prints the final answer.*
+
+The LLM reads the plain‑text `"12"`, decides whether that satisfies the user’s goal, and either responds or plans another action.
+
+---
+
+### ⏱️ Timeline at a Glance
+
+```text
+Agent → Server : tools/list      (id 42)
+Server → Agent : result.tools…   (id 42)
+
+Agent → Server : tools/call…     (id 43)
+Server → Agent : result "12"     (id 43)
+```
+
+Each arrow is a standalone JSON object on the wire — **never** a bundled request + response.
+
+With just these two primitives—**discover** & **invoke**—an LLM agent can explore any MCP server’s capabilities and wield them intelligently with zero hard‑coded API calls.
+
 
 ### Call Flow Cheat‑Sheet
 ```mermaid
