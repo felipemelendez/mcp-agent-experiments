@@ -151,7 +151,7 @@ mcp‑quickstart/
 | Agent                    | Purpose                                                                                               | MCP Servers Used                        |
 | ------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------- |
 | **Quick Restaurant Finder** | One-liner demo that uses a Playwright browser to fetch “best restaurant” results for San Francisco | Playwright (browser automation)         |
-| **Airbnb Finder**        | Surfaces top holiday rentals that meet price, amenity, and date constraints                            | Playwright (browser) + Airbnb MCP       |
+| **Airbnb Finder**        | Surfaces top rentals that meet price, amenity, and date constraints                            | Playwright (browser) + Airbnb MCP       |
 | **Restaurant Scout**     | Ranks the best restaurants in any city via live Google search and review-site scraping                 | Playwright (browser automation)         |
 | **Equity Screener**      | Scrapes live fundamentals and returns growth/value/dividend shortlists on demand                       | Playwright (browser automation)         |
 
